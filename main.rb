@@ -21,47 +21,13 @@ class MainWindow < Gtk::Window
 		@store.clear
 		Dir.glob(File.join(@parent, "*")).each do |path|
         	is_dir = FileTest.directory?(path)
-        	if !is_dir
-        		file = File.open(path) 
-        		fname = false
-        		ficon = false
-        		fexec = false
-				while line  = file.gets
-        			case line.split("=")[0]
-        			when "Name"
-        				name = line.split("=")[1]
-        				fname = true
-        			when "Icon"
-        				foo = line.split("=")
-        				bar = foo[1]
-        				bar[-1] = "."
-        				icon = find_file(bar + "svg")
-        				ficon = true
-        			when "Exec"
-        				exec = line.split("=")[1]
-        				fexec = true
-        			end
-        			if fname&&fexec&&ficon
-        				break
-        			end
-				end
-				if name==nil
-					name = File.basename(path, ".desktop")
-				end
-			else
-				name = File.basename(path)
-			end
-			
-			if icon.to_s==''
-				icon = "./gnome-fs-regular.png"
-			end
-			icon_px = Gdk::Pixbuf.new(icon) if !is_dir
-			icon_px = @file_pixbuf if icon == nil
+
+			icon_px = @file_pixbuf if !is_dir
 			icon_px = @folder_pixbuf if is_dir
 			
         	iter = @store.append
         	path = GLib.filename_to_utf8(path)
-        	iter[COL_DISPLAY_NAME] = name
+        	iter[COL_DISPLAY_NAME] = File.basename(path)
         	iter[COL_PATH] = path
         	iter[COL_IS_DIR] = is_dir
         	iter[COL_PIXBUF] = icon_px
@@ -70,7 +36,7 @@ class MainWindow < Gtk::Window
 	
 	def initialize()
 		super(:toplevel)
-		set_title("ALaunch")
+		set_title("ADesktop")
 		self.signal_connect("destroy") {
 			Gtk.main_quit
 		}
@@ -81,7 +47,7 @@ class MainWindow < Gtk::Window
       	@folder_pixbuf = Gdk::Pixbuf.new("gnome-fs-directory.png")
 		
 		@store = Gtk::ListStore.new(String, String, TrueClass, Gdk::Pixbuf)
-		@parent = "/usr/share/applications/"
+		@parent = "/home/aosc/Desktop"
 		
 		@store.set_default_sort_func do |a, b|
         	if !a[COL_IS_DIR] and b[COL_IS_DIR]
@@ -98,34 +64,17 @@ class MainWindow < Gtk::Window
       	
       	box = Gtk::Box.new(:vertical,0)
       	self.add(box)
-      	
-      	fixed = Gtk::Fixed.new()
-      	button_exit = Gtk::Button.new(:label => "Back", :mnemonic => nil, :stock_id => nil)
-      	button_exit.signal_connect("clicked") {
-      		Gtk.main_quit()
-      	}
-      	fixed.add(button_exit)
-      	box.pack_start(fixed, :expand => false, :fill => false, :padding => 0)
-      	
       	sw = Gtk::ScrolledWindow.new
       	sw.set_policy(:automatic, :automatic)
       	box.pack_end(sw, :expand => true, :fill => true, :padding => 0)
       	
       	iconview = Gtk::IconView.new(@store)
-      	iconview.item_orientation = :horizontal
-      	iconview.activate_on_single_click = true
-      	iconview.selection_mode = :single
+      	iconview.selection_mode = :multiple
       	iconview.text_column = COL_DISPLAY_NAME
       	iconview.pixbuf_column = COL_PIXBUF
       	iconview.signal_connect("item_activated") do |iview, path|
         	iter = @store.get_iter(path)
-			if File.ftype(iter[COL_PATH]) != "directory"
-				system("gtk-launch "+File.basename(iter[COL_PATH]))
-				Gtk.main_quit
-        	elsif iter[COL_DISPLAY_NAME]
-          		@parent = iter[COL_PATH]
-          		fill_store
-        	end
+			system("xdg-open "+iter[COL_PATH])
       	end
       	
       	sw.add(iconview)
