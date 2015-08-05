@@ -11,15 +11,15 @@ class MainWindow < Gtk::Window
 		Dir.glob(File.join(@parent, "*")).each do |path|
         	is_dir = FileTest.directory?(path)
 			
-			iconfile = Gtk::IconTheme.default.lookup_icon("gtk-file", 48, 0).filename if !is_dir
-			iconfile = Gtk::IconTheme.default.lookup_icon("folder", 48, 0).filename if is_dir
+			iconfile = Gtk::IconTheme.default.lookup_icon("gtk-file", 64, 0).filename if !is_dir
+			iconfile = Gtk::IconTheme.default.lookup_icon("folder", 64, 0).filename if is_dir
 			
         	iter = @store.append
         	path = GLib.filename_to_utf8(path)
         	iter[COL_DISPLAY_NAME] = File.basename(path)
         	iter[COL_PATH] = path
         	iter[COL_IS_DIR] = is_dir
-        	iter[COL_PIXBUF] = Gdk::Pixbuf.new(iconfile)
+        	iter[COL_PIXBUF] = Gdk::Pixbuf.new(iconfile).scale(64,64)
       	end
     end
 	
