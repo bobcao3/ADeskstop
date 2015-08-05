@@ -36,6 +36,9 @@ class MainWindow < Gtk::Window
 		self.skip_taskbar_hint = true
 		self.keep_above = true
 		self.decorated = false
+		self.role = "panel"
+		self.type_hint = Gdk::WindowTypeHint::DESKTOP
+		self.screen = screen
 		
 		@store = Gtk::ListStore.new(String, String, TrueClass, Gdk::Pixbuf)
 		@parent = "/home/aosc/Desktop"
