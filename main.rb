@@ -24,7 +24,7 @@ class MainWindow < Gtk::Window
     end
 	
 	def initialize()
-		super(:popup)
+		super(:toplevel)
 		set_title("ADesktop")
 		self.signal_connect("destroy") {
 			Gtk.main_quit
@@ -34,6 +34,8 @@ class MainWindow < Gtk::Window
 		self.set_default_size(screen.width,screen.height)
 		self.skip_pager_hint = true
 		self.skip_taskbar_hint = true
+		self.keep_above = true
+		self.decorated = false
 		
 		@store = Gtk::ListStore.new(String, String, TrueClass, Gdk::Pixbuf)
 		@parent = "/home/aosc/Desktop"
