@@ -6,45 +6,35 @@ module ADesktop
 class MainWindow < Gtk::Window
 	COL_PATH, COL_DISPLAY_NAME, COL_IS_DIR, COL_PIXBUF = (0..3).to_a
 	 
-	def find_file(basename)
-		%w(./ /usr/share/gtk-3.0/demo /usr/share/icons/Numix-Circle-Light/scalable/apps/).each do |dirname|
-			path = dirname + basename
-			if File.exist?(path)
-				return path
-			end
-		end
-		
-    	return "./gnome-fs-regular.png"
-  	end
-	 
 	def fill_store
 		@store.clear
 		Dir.glob(File.join(@parent, "*")).each do |path|
         	is_dir = FileTest.directory?(path)
-
-			icon_px = @file_pixbuf if !is_dir
-			icon_px = @folder_pixbuf if is_dir
+			
+			iconfile = Gtk::IconTheme.default.lookup_icon("gtk-file", 48, 0).filename if !is_dir
+			iconfile = Gtk::IconTheme.default.lookup_icon("folder", 48, 0).filename if is_dir
 			
         	iter = @store.append
         	path = GLib.filename_to_utf8(path)
         	iter[COL_DISPLAY_NAME] = File.basename(path)
         	iter[COL_PATH] = path
         	iter[COL_IS_DIR] = is_dir
-        	iter[COL_PIXBUF] = icon_px
+        	iter[COL_PIXBUF] = Gdk::Pixbuf.new(iconfile)
       	end
     end
 	
 	def initialize()
-		super(:toplevel)
+		super(:popup)
 		set_title("ADesktop")
 		self.signal_connect("destroy") {
 			Gtk.main_quit
 		}
 		
-		self.fullscreen
-		
-		@file_pixbuf = Gdk::Pixbuf.new("gnome-fs-regular.png")
-      	@folder_pixbuf = Gdk::Pixbuf.new("gnome-fs-directory.png")
+		screen = Gdk::Screen.default
+		self.set_default_size(screen.width,screen.height)
+		self.set_keep_above(true)
+		self.skip_pager_hint = true
+		self.skip_taskbar_hint = true
 		
 		@store = Gtk::ListStore.new(String, String, TrueClass, Gdk::Pixbuf)
 		@parent = "/home/aosc/Desktop"
